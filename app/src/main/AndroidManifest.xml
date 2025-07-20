@@ -4,7 +4,6 @@
 
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
-
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -15,6 +14,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Vocabulary"
         tools:targetApi="31">
+
+<!--        nếu mai mà thi vào chỗ này thì xóa ghi chú dòng dướt đi và sửa chỗ android:name thành .LoginActivity-->
+<!--        <activity android:name=".MainActivity" />-->
         <activity android:name=".VocabularyActivity" />
         <activity android:name=".TopicActivity" />
         <activity android:name=".ItemSettingActivity" />
@@ -24,16 +26,17 @@
         <receiver android:name=".AlarmReceiver" />
         <activity android:name=".PracticeActivity"/>
         <activity android:name=".StatisticsActivity"/>
+        <activity android:name=".RegisterActivity" />
+
+        <!-- Màn hình khởi động -->
+
         <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
     </application>
-
 </manifest>

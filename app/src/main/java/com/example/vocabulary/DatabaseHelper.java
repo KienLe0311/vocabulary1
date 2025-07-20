@@ -44,6 +44,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 "synonyms TEXT, " +
                 "FOREIGN KEY(vocab_id) REFERENCES Vocabulary(id))");
 
+        db.execSQL("CREATE TABLE User (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "username TEXT UNIQUE, " +
+                "password TEXT, " +
+                "email TEXT, " +
+                "created_at DATETIME DEFAULT CURRENT_TIMESTAMP)");
+
+
         // Thêm khóa học
         String[] courseNames = {"TOEIC", "TOEFL", "SAT", "IELTS", "Business English", "Basic English"};
         ContentValues course = new ContentValues();
@@ -199,6 +207,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS Vocabulary");
         db.execSQL("DROP TABLE IF EXISTS Topic");
         db.execSQL("DROP TABLE IF EXISTS Course");
+        db.execSQL("DROP TABLE IF EXISTS User");
         onCreate(db);
     }
 }
