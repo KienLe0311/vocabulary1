@@ -27,6 +27,8 @@
         <activity android:name=".PracticeActivity"/>
         <activity android:name=".StatisticsActivity"/>
         <activity android:name=".RegisterActivity" />
+        <activity android:name=".AdminActivity" />
+
 
         <!-- Màn hình khởi động -->
 

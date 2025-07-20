@@ -40,10 +40,19 @@ public class LoginActivity extends AppCompatActivity {
                 return;
             }
 
+            // ✅ Kiểm tra tài khoản admin trước
+            if (u.equals("admin") && p.equals("admin")) {
+                Toast.makeText(this, "Đăng nhập quản trị thành công", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(this, AdminActivity.class);
+                startActivity(intent);
+                finish();
+                return;
+            }
+
+            // ✅ Kiểm tra tài khoản thường trong bảng User
             Cursor c = db.rawQuery("SELECT * FROM User WHERE username=? AND password=?", new String[]{u, p});
             if (c.moveToFirst()) {
                 Toast.makeText(this, "Đăng nhập thành công", Toast.LENGTH_SHORT).show();
-                // chuyển sang màn hình chính
                 Intent intent = new Intent(this, MainActivity.class);
                 intent.putExtra("username", u);
                 startActivity(intent);
