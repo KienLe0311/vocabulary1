@@ -50,8 +50,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 "password TEXT, " +
                 "email TEXT, " +
                 "created_at DATETIME DEFAULT CURRENT_TIMESTAMP)");
-
-
         // Thêm khóa học
         String[] courseNames = {"TOEIC", "TOEFL", "SAT", "IELTS", "Business English", "Basic English"};
         ContentValues course = new ContentValues();
@@ -79,7 +77,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         // Dữ liệu từ vựng (50 từ - 5 chủ đề đầu)
         String[][] words = {
-                // Office
                 {"stationery", "materials for writing", "She bought new stationery.", "đồ dùng văn phòng", "stationery.mp3"},
                 {"photocopier", "a machine that makes copies", "The photocopier is broken.", "máy photocopy", "photocopier.mp3"},
                 {"printer", "a device for printing", "We need a new printer.", "máy in", "printer.mp3"},
