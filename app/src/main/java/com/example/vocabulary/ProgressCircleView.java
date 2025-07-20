@@ -1,11 +1,15 @@
 package com.example.vocabulary;
 
+import static androidx.core.content.ContextCompat.startActivity;
+
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.util.AttributeSet;
 import android.view.View;
+import android.widget.LinearLayout;
 
 public class ProgressCircleView extends View {
 
@@ -42,6 +46,7 @@ public class ProgressCircleView extends View {
         this.progress = Math.max(0, Math.min(1, value));
         invalidate(); // gọi vẽ lại
     }
+
 
     @Override
     protected void onDraw(Canvas canvas) {
