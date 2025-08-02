@@ -7,6 +7,7 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.os.Handler;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
@@ -16,11 +17,12 @@ import android.view.View;
 import android.widget.*;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Locale;
-import java.util.Random;
 
 public class PracticeActivity extends AppCompatActivity {
 
@@ -56,7 +58,6 @@ public class PracticeActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_practice);
 
-        // Ánh xạ giao diện
         questionText = findViewById(R.id.questionText);
         learnWord = findViewById(R.id.learnWord);
         learnMeaning = findViewById(R.id.learnMeaning);
@@ -77,13 +78,10 @@ public class PracticeActivity extends AppCompatActivity {
 
         topicId = getIntent().getIntExtra("topic_id", -1);
 
-        // Khởi tạo TextToSpeech
         tts = new TextToSpeech(this, status -> {
             if (status == TextToSpeech.SUCCESS) {
                 tts.setLanguage(Locale.US);
-                SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-                boolean isSlow = prefs.getBoolean(KEY_TTS_SLOW, false);
-                tts.setSpeechRate(isSlow ? 0.5f : 1.0f);
+                applyTtsRate();
             }
         });
 
@@ -101,37 +99,50 @@ public class PracticeActivity extends AppCompatActivity {
 
         learnListenButton.setOnClickListener(v -> {
             if (currentWord != null && tts != null) {
-                applyTtsRate(); // lấy tốc độ hiện tại từ SharedPreferences
+                applyTtsRate();
                 tts.speak(currentWord.word, TextToSpeech.QUEUE_FLUSH, null, null);
             }
         });
 
         listenButton.setOnClickListener(v -> {
             if (currentWord != null && tts != null) {
-                applyTtsRate(); // lấy tốc độ hiện tại từ SharedPreferences
+                applyTtsRate();
                 tts.speak(currentWord.word, TextToSpeech.QUEUE_FLUSH, null, null);
             }
         });
 
-        speakButton.setOnClickListener(v -> {
-            Toast.makeText(this, "Giữ nút để ghi âm", Toast.LENGTH_SHORT).show();
-        });
+        speakButton.setOnClickListener(v -> Toast.makeText(this, "Giữ nút để ghi âm", Toast.LENGTH_SHORT).show());
 
-        // Khởi tạo SpeechRecognizer
         speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
         speechIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         speechIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-        speechIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.US);
+        speechIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en-US");
+        speechIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 2000);
+        speechIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 1500);
 
-        // Nhận dạng giọng nói
         speechRecognizer.setRecognitionListener(new RecognitionListener() {
             @Override public void onReadyForSpeech(Bundle params) {}
             @Override public void onBeginningOfSpeech() {}
             @Override public void onRmsChanged(float rmsdB) {}
             @Override public void onBufferReceived(byte[] buffer) {}
             @Override public void onEndOfSpeech() {}
-            @Override public void onError(int error) {
-                Toast.makeText(PracticeActivity.this, "Lỗi nhận giọng nói", Toast.LENGTH_SHORT).show();
+
+            @Override
+            public void onError(int error) {
+                String message;
+                switch (error) {
+                    case SpeechRecognizer.ERROR_AUDIO: message = "Lỗi âm thanh"; break;
+                    case SpeechRecognizer.ERROR_CLIENT: message = "Lỗi ứng dụng"; break;
+                    case SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS: message = "Thiếu quyền"; break;
+                    case SpeechRecognizer.ERROR_NETWORK: message = "Lỗi mạng"; break;
+                    case SpeechRecognizer.ERROR_NETWORK_TIMEOUT: message = "Hết thời gian mạng"; break;
+                    case SpeechRecognizer.ERROR_NO_MATCH: message = "Không khớp kết quả"; break;
+                    case SpeechRecognizer.ERROR_RECOGNIZER_BUSY: message = "Đang bận"; break;
+                    case SpeechRecognizer.ERROR_SERVER: message = "Lỗi server"; break;
+                    case SpeechRecognizer.ERROR_SPEECH_TIMEOUT: message = "Không phát hiện giọng nói"; break;
+                    default: message = "Lỗi không xác định"; break;
+                }
+                Toast.makeText(PracticeActivity.this, "Lỗi: " + message, Toast.LENGTH_SHORT).show();
             }
 
             @Override
@@ -143,7 +154,7 @@ public class PracticeActivity extends AppCompatActivity {
 
                     speakText.setText(spokenText);
 
-                    if (spokenText.equals(targetWord)) {
+                    if (spokenText.contains(targetWord)) {
                         Toast.makeText(PracticeActivity.this, "Phát âm đúng!", Toast.LENGTH_SHORT).show();
                         ContentValues values = new ContentValues();
                         values.put("status", 1);
@@ -159,18 +170,18 @@ public class PracticeActivity extends AppCompatActivity {
             @Override public void onEvent(int eventType, Bundle params) {}
         });
 
-        // Ghi âm khi giữ nút
         speakButton.setOnTouchListener((v, event) -> {
             switch (event.getAction()) {
                 case MotionEvent.ACTION_DOWN:
-                    if (checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-                        requestPermissions(new String[]{android.Manifest.permission.RECORD_AUDIO}, 1);
+                    if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                        ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.RECORD_AUDIO}, 1);
                         return true;
                     }
                     Toast.makeText(this, "Bắt đầu nói...", Toast.LENGTH_SHORT).show();
-                    speechRecognizer.startListening(speechIntent);
+                    new Handler().postDelayed(() -> {
+                        speechRecognizer.startListening(speechIntent);
+                    }, 400);
                     return true;
-
                 case MotionEvent.ACTION_UP:
                     Toast.makeText(this, "Dừng ghi âm", Toast.LENGTH_SHORT).show();
                     speechRecognizer.stopListening();
@@ -178,6 +189,10 @@ public class PracticeActivity extends AppCompatActivity {
             }
             return false;
         });
+
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.RECORD_AUDIO}, 1);
+        }
     }
 
     private void applyTtsRate() {
@@ -288,7 +303,7 @@ public class PracticeActivity extends AppCompatActivity {
                 }
                 break;
             case 2:
-                correct = true; // phần ghi âm đã xử lý riêng
+                correct = true;
                 break;
         }
 
